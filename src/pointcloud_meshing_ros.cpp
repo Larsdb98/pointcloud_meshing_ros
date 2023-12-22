@@ -12,19 +12,21 @@
 
 class PointCloudMeshingNode
 {
+private:
+    ros::Subscriber sub;
+    std::string pointcloud_topic, file_out_directory;
+
 public:
-    PointCloudMeshingNode()
+    PointCloudMeshingNode(ros::NodeHandle &nodeHandle)
     {
-        ros::NodeHandle nh;
-        ros::Subscriber sub;
-        std::string pointcloud_topic, file_out_directory;
-        nh.param<std::string>("pointcloud_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
-        nh.param<std::string>("file_out_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
+        // std::string pointcloud_topic, file_out_directory;
+        nodeHandle.param<std::string>("pointcloud_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
+        nodeHandle.param<std::string>("file_out_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
 
         std::cout << "pointcloud topic: " << pointcloud_topic << std::endl;
         std::cout << "file out directory: " << file_out_directory << std::endl;
 
-        sub = nh.subscribe(pointcloud_topic, 1, &PointCloudMeshingNode::pointcloudCallback, this);
+        sub = nodeHandle.subscribe(pointcloud_topic, 1, &PointCloudMeshingNode::pointcloudCallback, this);
     }
 
     void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
@@ -46,7 +48,10 @@ public:
         n.setKSearch(20);
         n.compute(*normals);
 
-        //* normals should not contain the point normals + surface curvatures
+        std::cout << "Normals computed by PCL:" << std::endl;
+        std::cout << *normals << std::endl;
+
+        //* normals should not contain the point normals + surface curvatures 
     
 
         pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
@@ -61,11 +66,11 @@ public:
 
         gp3.setSearchRadius(0.025);
         gp3.setMu(2.5);
-        gp3.setMaximumNearestNeighbors(100);
+        gp3.setMaximumNearestNeighbors(1000);
         gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
         gp3.setMinimumAngle(M_PI / 18);       // 10 degrees
         gp3.setMaximumAngle(2 * M_PI / 3);    // 120 degrees
-        gp3.setNormalConsistency(false);
+        gp3.setNormalConsistency(true);
 
         gp3.setInputCloud(cloud_with_normals);
         gp3.setSearchMethod(tree2);
@@ -83,17 +88,14 @@ public:
         ROS_INFO("Mesh exported");
     }
 
-
-
-    
-    
 };
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pointcloud_meshing_ros_node");
+    ros::NodeHandle nh;
 
-    PointCloudMeshingNode node;
+    PointCloudMeshingNode node(nh);
 
     ros::spin();
 
