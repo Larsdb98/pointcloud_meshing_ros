@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+    <node pkg="pointcloud_meshing_ros" type="pointcloud_meshing_ros_node" name="pointcloud_meshing_node" output="screen">
+        <param name="pointcloud_topic" value="/wrist_camera/depth/points_xyzrgb_world_frame"/>
+        <param name="file_out_directory" value="/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj"/>
+    </node>
+
+</launch>

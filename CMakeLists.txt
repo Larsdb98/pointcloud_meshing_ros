@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   pcl_msgs
   pcl_ros
-  pcl_visualization
+  # pcl_visualization
   roscpp
   sensor_msgs
 )
@@ -109,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES pointcloud_meshing_ros
-#  CATKIN_DEPENDS cv_bridge pcl_conversions pcl_msgs pcl_ros pcl_visualization roscpp sensor_msgs
+#  CATKIN_DEPENDS cv_bridge pcl_conversions pcl_msgs pcl_ros roscpp sensor_msgs pcl_visualization
 #  DEPENDS system_lib
 )
 
@@ -122,6 +122,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -137,7 +138,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/pointcloud_meshing_ros_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/rgb_pointcloud_greedy_meshing.cpp)
+add_executable(${PROJECT_NAME}_node src/pointcloud_meshing_ros.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,9 +152,13 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+  ${PCL_COMMON_LIBRARIES}
+  ${PCL_IO_LIBRARIES}
+  ${PCL_SEARCH_LIBRARIES}
+  ${PCL_FEATURES_LIBRARIES}
+)
 
 #############
 ## Install ##
