@@ -7,6 +7,7 @@
 #include <pcl/PolygonMesh.h>
 #include <pcl/io/obj_io.h>
 #include <pcl/surface/gp3.h>
+#include <pcl/filters/filter.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -15,16 +16,17 @@ class PointCloudMeshingNode
 private:
     ros::Subscriber sub;
     std::string pointcloud_topic, file_out_directory;
+    
 
 public:
     PointCloudMeshingNode(ros::NodeHandle &nodeHandle)
     {
         // std::string pointcloud_topic, file_out_directory;
-        nodeHandle.param<std::string>("pointcloud_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
-        nodeHandle.param<std::string>("file_out_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
+        nodeHandle.param<std::string>("/meshing_from_pointcloud/pointcloud_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
+        nodeHandle.param<std::string>("/meshing_from_pointcloud/file_out_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
 
-        std::cout << "pointcloud topic: " << pointcloud_topic << std::endl;
-        std::cout << "file out directory: " << file_out_directory << std::endl;
+        std::cout << "Pointcloud topic: " << pointcloud_topic << std::endl;
+        std::cout << "File out directory: " << file_out_directory << std::endl;
 
         sub = nodeHandle.subscribe(pointcloud_topic, 1, &PointCloudMeshingNode::pointcloudCallback, this);
     }
@@ -34,7 +36,18 @@ public:
         ROS_INFO("Received pointcloud");
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_clean(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::fromROSMsg(*cloud_msg, *cloud);
+
+        // The pointclouds may contain NaN values for coordinates & other stuff. We need to specify that the clouds are NOT dense.
+        // PCL is_dense should be true only if the point cloud doesn't contain any NaNs. We can't assume this.
+
+        cloud->is_dense = false;
+        std::vector<int> index1;
+
+        pcl::removeNaNFromPointCloud(*cloud, *cloud_clean, index1);
+
+        cloud = cloud_clean;
 
         // Greedy surface triangulation requires normals to work:
         // Normal estimation*
@@ -46,10 +59,11 @@ public:
         n.setInputCloud(cloud);
         n.setSearchMethod(tree);
         n.setKSearch(20);
-        n.compute(*normals);
 
-        std::cout << "Normals computed by PCL:" << std::endl;
-        std::cout << *normals << std::endl;
+        n.setViewPoint(0.0, 0.0, 1.0); // higher viewpoint, by default it's the origin. This fixes the normal orientation issue.
+        // All normals now point upwards. This can be assumed given that we work with sand piles. 
+
+        n.compute(*normals);
 
         //* normals should not contain the point normals + surface curvatures 
     
@@ -64,7 +78,12 @@ public:
 
         pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
 
-        gp3.setSearchRadius(0.025);
+        gp3.setSearchRadius(0.1); // was 0.025 initially
+        /* 
+        Setting the setSearchRadius parameter to 0.1 meshed the maze.ply pointcloud nicely but some patches of points have an incorrect normal orientation
+        This causes the mesh of these patches to be disconnected from the rest of the mesh. Maybe there are other variabels to try out?
+        I might think that this happens due to the way we estimate the normals.
+         */
         gp3.setMu(2.5);
         gp3.setMaximumNearestNeighbors(1000);
         gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
