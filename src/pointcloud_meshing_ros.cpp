@@ -22,8 +22,8 @@ public:
     PointCloudMeshingNode(ros::NodeHandle &nodeHandle)
     {
         // std::string pointcloud_topic, file_out_directory;
-        nodeHandle.param<std::string>("/meshing_from_pointcloud/pointcloud_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
-        nodeHandle.param<std::string>("/meshing_from_pointcloud/file_out_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
+        nodeHandle.param<std::string>("/pointcloud_to_mesh_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
+        nodeHandle.param<std::string>("/mesh_file_export_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
 
         std::cout << "Pointcloud topic: " << pointcloud_topic << std::endl;
         std::cout << "File out directory: " << file_out_directory << std::endl;
