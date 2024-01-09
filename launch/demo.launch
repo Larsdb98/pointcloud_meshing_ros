@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
+    <!-- Mesh file generation parameters -->
+    <param name="/pointcloud_to_mesh_topic" value="/wrist_camera/depth/points_xyzrgb_world_frame" />
+    <param name="/mesh_file_export_directory" value="/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj" />
+
     <node pkg="pointcloud_meshing_ros" type="pointcloud_meshing_ros_node" name="meshing_from_pointcloud" output="screen">
-        <param name="/pointcloud_to_mesh_topic" value="/wrist_camera/depth/points_xyzrgb_world_frame" />
-        <param name="/mesh_file_export_directory" value="/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj" />
+        <!-- Remap meshing success message topic to whatever is needed -->
         <remap from="meshing_success" to="meshing_from_pointcloud/meshing_success" />
     </node>
 

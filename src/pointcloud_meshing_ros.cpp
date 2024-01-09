@@ -108,9 +108,10 @@ public:
 
         // Export mesh as .obj & publish success message
         std_msgs::Bool success_msg;
-
+        
         try {
-            pcl::io::saveOBJFile("/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj", triangles);
+            // pcl::io::saveOBJFile("/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj", triangles);
+            pcl::io::saveOBJFile(file_out_directory, triangles);
             ROS_INFO("Mesh exported");
 
             success_msg.data = true;
