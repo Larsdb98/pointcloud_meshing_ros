@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <std_msgs/Bool.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/search/kdtree.h> // for kdTree
 #include <pcl/features/normal_3d.h>
@@ -15,6 +16,7 @@ class PointCloudMeshingNode
 {
 private:
     ros::Subscriber sub;
+    ros::Publisher success_pub;
     std::string pointcloud_topic, file_out_directory;
     
 
@@ -29,6 +31,9 @@ public:
         std::cout << "File out directory: " << file_out_directory << std::endl;
 
         sub = nodeHandle.subscribe(pointcloud_topic, 1, &PointCloudMeshingNode::pointcloudCallback, this);
+
+        // When a new mesh has been created, set bool message to true and publish boolean message.
+        success_pub = nodeHandle.advertise<std_msgs::Bool>("meshing_success", 1000);
     }
 
     void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
@@ -101,11 +106,24 @@ public:
         // pcl::fromROSMsg(triangles.cloud, pcl_cloud);
         // pcl::toPCLPointCloud2(pcl_cloud, pcl_pc2);
 
-        // Export mesh as .obj
-        
-        pcl::io::saveOBJFile("/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj", triangles);
-        ROS_INFO("Mesh exported");
+        // Export mesh as .obj & publish success message
+        std_msgs::Bool success_msg;
+
+        try {
+            pcl::io::saveOBJFile("/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj", triangles);
+            ROS_INFO("Mesh exported");
+
+            success_msg.data = true;
+            success_pub.publish(success_msg);
+        }
+
+        catch (...){
+            success_msg.data = false;
+            success_pub.publish(success_msg);
+        }
+
     }
+
 
 };
 
