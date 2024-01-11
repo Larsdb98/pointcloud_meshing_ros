@@ -2,7 +2,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Bool.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/search/kdtree.h> // for kdTree
+#include <pcl/search/kdtree.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/point_types.h>
 #include <pcl/PolygonMesh.h>
@@ -23,7 +23,6 @@ private:
 public:
     PointCloudMeshingNode(ros::NodeHandle &nodeHandle)
     {
-        // std::string pointcloud_topic, file_out_directory;
         nodeHandle.param<std::string>("/pointcloud_to_mesh_topic", pointcloud_topic, "/wrist_camera/depth/points_xyzrgb_world_frame");
         nodeHandle.param<std::string>("/mesh_file_export_directory", file_out_directory, "~/Desktop/output_test_mesh.obj");
 
@@ -38,7 +37,7 @@ public:
 
     void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
     {
-        ROS_INFO("Received pointcloud");
+        ROS_INFO("Received pointcloud. Processing...");
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_clean(new pcl::PointCloud<pcl::PointXYZ>);
@@ -112,7 +111,7 @@ public:
         try {
             // pcl::io::saveOBJFile("/home/lars/Master_Thesis_workspaces/VIS4ROB_Vulkan_Glasses/catkin_ws/output/test.obj", triangles);
             pcl::io::saveOBJFile(file_out_directory, triangles);
-            ROS_INFO("Mesh exported");
+            ROS_INFO("Mesh exported !");
 
             success_msg.data = true;
             success_pub.publish(success_msg);
@@ -121,6 +120,7 @@ public:
         catch (...){
             success_msg.data = false;
             success_pub.publish(success_msg);
+            ROS_ERROR("Unable to save pcl::PolygonMesh as OBJ file !");
         }
 
     }
